@@ -32,4 +32,20 @@ router.get('/', authMiddleware, async (req, res) => {
     }
 });
 
+// Delete a journal entry
+router.delete('/:id', authMiddleware, async (req, res) => {
+    try {
+        const entry = await JournalEntry.findOneAndDelete({
+            _id: req.params.id,
+            userId: req.user.id || req.user._id
+        });
+        if (!entry) {
+            return res.status(404).json({ success: false, error: 'Journal entry not found or unauthorized' });
+        }
+        res.json({ success: true, message: 'Journal entry deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 module.exports = router;

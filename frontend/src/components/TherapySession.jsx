@@ -72,7 +72,7 @@ const TherapySession = () => {
     };
 
     return (
-        <div className="py-6 font-['Inter'] animate-fade-in pb-32 space-y-16">
+        <div className="py-6 font-['Inter'] animate-fade-in pb-32 space-y-16 pl-0 pr-6 sm:px-8 max-w-full overflow-x-hidden">
             {/* Header */}
             <header className="space-y-4 sm:space-y-8">
                 <Badge variant="solid" color="teal" size="sm" className="tracking-[6px] sm:tracking-[8px] uppercase !bg-[#00adef]/10 !text-[#00adef]">AI Therapy Mode</Badge>
@@ -89,7 +89,7 @@ const TherapySession = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 w-full">
                 {/* Session Stages */}
-                <aside className="lg:col-span-3 flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible no-scrollbar pb-2 sm:pb-0 w-full">
+                <aside className="lg:col-span-3 flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible no-scrollbar pb-2 sm:pb-0 w-full min-w-0 px-1 py-1">
                     {SESSION_STAGES.map((stage, i) => (
                         <div key={stage.id} className={`flex items-center gap-3 sm:gap-6 px-4 sm:px-8 py-3 sm:py-6 rounded-[16px] sm:rounded-[32px] transition-all flex-shrink-0 lg:flex-shrink-1 ${i === stageIndex ? 'bg-[#091426] text-white shadow-lg' : i < stageIndex ? 'bg-[#00adef]/10 text-[#00adef]' : 'bg-white text-gray-300 border border-gray-50'}`}>
                             <span className="material-symbols-outlined text-xl sm:text-2xl">{stage.icon}</span>
@@ -168,11 +168,11 @@ const TherapySession = () => {
                                     onChange={e => setInput(e.target.value)}
                                     onKeyDown={e => e.key === 'Enter' && sendMessage()}
                                     placeholder="Share your thoughts here..."
-                                    className="flex-1 bg-transparent border-none px-6 sm:px-10 py-4 sm:py-8 text-sm sm:text-xl font-medium text-[#091426] outline-none placeholder-gray-300"
+                                    className="flex-1 w-full min-w-0 bg-transparent border-none pl-3 pr-2 sm:px-10 py-4 sm:py-8 text-sm sm:text-xl font-medium text-[#091426] outline-none placeholder-gray-300"
                                 />
                                 <button
                                     onClick={sendMessage}
-                                    className="w-14 h-14 sm:w-24 sm:h-24 bg-[#091426] text-white rounded-[24px] sm:rounded-[40px] flex items-center justify-center hover:bg-[#00adef] transition-all shadow-xl group flex-shrink-0"
+                                    className="w-12 h-12 sm:w-24 sm:h-24 bg-[#091426] text-white rounded-[20px] sm:rounded-[40px] flex items-center justify-center hover:bg-[#00adef] transition-all shadow-xl group flex-shrink-0"
                                 >
                                     <span className="material-symbols-outlined text-2xl sm:text-4xl group-hover:translate-x-2 transition-transform">arrow_forward</span>
                                 </button>

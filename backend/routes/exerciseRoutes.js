@@ -2,6 +2,20 @@ const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middleware/authMiddleware");
 const recommendationService = require("../services/recommendationService");
+const User = require("../models/User");
+const Exercise = require("../models/Exercise");
+
+const adminOnly = async (req, res, next) => {
+  try {
+    const adminUser = await User.findById(req.user.id || req.user._id);
+    if (!adminUser || adminUser.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Admin access required' });
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
 
 router.get("/", authMiddleware, async (req, res, next) => {
   try {
@@ -153,6 +167,58 @@ router.post("/generate", authMiddleware, async (req, res, next) => {
     let finalExercises = fallbackExercises;
     res.status(200).json({ success: true, exercises: finalExercises });
 
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Create a new exercise (Admin only)
+router.post("/", authMiddleware, adminOnly, async (req, res, next) => {
+  try {
+    const { title, description, duration, imageUrl, category, content } = req.body;
+    if (!title || !description || !duration || !imageUrl) {
+      return res.status(400).json({ success: false, message: "Title, description, duration, and imageUrl are required" });
+    }
+    const exercise = await Exercise.create({
+      title,
+      description,
+      duration,
+      imageUrl,
+      category: category || "Mindfulness",
+      content
+    });
+    res.status(201).json({ success: true, data: exercise });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Update an exercise (Admin only)
+router.put("/:id", authMiddleware, adminOnly, async (req, res, next) => {
+  try {
+    const { title, description, duration, imageUrl, category, content } = req.body;
+    const exercise = await Exercise.findByIdAndUpdate(
+      req.params.id,
+      { title, description, duration, imageUrl, category, content },
+      { new: true, runValidators: true }
+    );
+    if (!exercise) {
+      return res.status(404).json({ success: false, message: "Exercise not found" });
+    }
+    res.json({ success: true, data: exercise });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Delete an exercise (Admin only)
+router.delete("/:id", authMiddleware, adminOnly, async (req, res, next) => {
+  try {
+    const exercise = await Exercise.findByIdAndDelete(req.params.id);
+    if (!exercise) {
+      return res.status(404).json({ success: false, message: "Exercise not found" });
+    }
+    res.json({ success: true, message: "Exercise deleted successfully" });
   } catch (error) {
     next(error);
   }

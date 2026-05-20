@@ -118,7 +118,6 @@ export const generateTTSAudio = (text) =>
     body: JSON.stringify({ text }),
   });
 
-// ================= JOURNAL =================
 export const saveJournalEntry = (text, detectedMood, reflectionQuestion) =>
   request("/journal", {
     method: "POST",
@@ -126,6 +125,11 @@ export const saveJournalEntry = (text, detectedMood, reflectionQuestion) =>
   });
 
 export const getJournalEntries = () => request("/journal");
+
+export const deleteJournalEntry = (id) =>
+  request(`/journal/${id}`, {
+    method: "DELETE",
+  });
 
 // ================= INTERVENTIONS / SESSIONS =================
 export const saveInterventionSession = (sessionData) =>
@@ -140,3 +144,34 @@ export const getInterventionStats = () => request("/interventions/stats");
 
 // ================= RISK ASSESSMENT =================
 export const getRiskAssessment = () => request("/risk-assessment");
+
+// ================= ADMIN MANAGEMENT =================
+export const getUsersAdmin = () => request("/users");
+
+export const deleteUserAdmin = (id) =>
+  request(`/users/manage/${id}`, {
+    method: "DELETE",
+  });
+
+export const changeUserPasswordAdmin = (userId, newPassword) =>
+  request("/users/change-password-admin", {
+    method: "POST",
+    body: JSON.stringify({ userId, newPassword }),
+  });
+
+export const createExerciseAdmin = (exerciseData) =>
+  request("/exercises", {
+    method: "POST",
+    body: JSON.stringify(exerciseData),
+  });
+
+export const updateExerciseAdmin = (id, exerciseData) =>
+  request(`/exercises/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(exerciseData),
+  });
+
+export const deleteExerciseAdmin = (id) =>
+  request(`/exercises/${id}`, {
+    method: "DELETE",
+  });

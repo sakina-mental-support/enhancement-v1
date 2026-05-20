@@ -18,8 +18,8 @@ const RiskGauge = ({ score, label, color }) => {
                     strokeLinecap="round" className="transition-all duration-[2000ms] ease-out" />
             </svg>
             <div className="absolute flex flex-col items-center">
-                <span className="text-3xl sm:text-5xl font-['Inter'] font-bold text-[#091426]">{score}</span>
-                <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-[2px] sm:tracking-[4px] text-gray-300 mt-1">{label}</span>
+                <span className="text-3xl sm:text-5xl font-['Inter'] font-bold text-white">{score}</span>
+                <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-[2px] sm:tracking-[4px] text-white/60 mt-1">{label}</span>
             </div>
         </div>
     );
@@ -87,7 +87,7 @@ const RiskAssessment = () => {
     const m = breakdown.mood, s = breakdown.survey, j = breakdown.journal;
 
     return (
-        <div className="py-4 sm:py-6 font-['Inter'] animate-fade-in space-y-8 sm:space-y-16 pb-24 sm:pb-32 w-full max-w-[100vw] overflow-x-hidden flex flex-col items-center box-border px-1 sm:px-0">
+        <div className="py-4 sm:py-6 font-['Inter'] animate-fade-in space-y-8 sm:space-y-16 pb-24 sm:pb-32 w-full max-w-[100vw] overflow-x-hidden flex flex-col items-center box-border pl-0 pr-6 sm:px-8">
             {/* Header */}
             <header className="space-y-6 sm:space-y-8 w-full box-border">
                 <Badge variant="solid" color="teal" size="sm" className="tracking-[2px] sm:tracking-[8px] uppercase !bg-[#00adef]/10 !text-[#00adef] text-center whitespace-normal break-words max-w-full">Risk Intelligence v2.0</Badge>
@@ -95,16 +95,16 @@ const RiskAssessment = () => {
                     <h1 className="font-['Inter'] text-3xl sm:text-6xl lg:text-8xl font-bold text-[#091426] tracking-tighter uppercase leading-[0.85] break-words text-left">
                         Risk <br /><span className="text-[#00adef] italic">Assessment.</span>
                     </h1>
-                    <div className="flex items-center w-full sm:w-auto gap-4">
-                        <button onClick={() => navigate('/onboarding')} className="w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-6 bg-white text-[#091426] border border-gray-100 rounded-[20px] sm:rounded-[32px] font-black uppercase tracking-[3px] sm:tracking-[4px] text-[9px] hover:border-[#00adef] hover:text-[#00adef] transition-all flex items-center justify-center gap-3 shadow-sm">
+                    <div className="flex flex-col sm:flex-row items-center w-full sm:w-auto gap-3 sm:gap-4">
+                        <button onClick={() => navigate('/onboarding')} className="w-full sm:w-auto px-4 sm:px-10 py-3 sm:py-6 bg-white text-[#091426] border border-gray-100 rounded-[20px] sm:rounded-[32px] font-black uppercase tracking-[3px] sm:tracking-[4px] text-[9px] hover:border-[#00adef] hover:text-[#00adef] transition-all flex items-center justify-center gap-3 shadow-sm">
                             <span className="material-symbols-outlined text-lg">edit_document</span>Retake Survey
                         </button>
-                        <button onClick={fetchAssessment} className="w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-6 bg-[#091426] text-white rounded-[20px] sm:rounded-[32px] font-black uppercase tracking-[3px] sm:tracking-[4px] text-[9px] hover:bg-[#00adef] transition-all flex items-center justify-center gap-3 shadow-xl">
+                        <button onClick={fetchAssessment} className="w-full sm:w-auto px-4 sm:px-10 py-3 sm:py-6 bg-[#091426] text-white rounded-[20px] sm:rounded-[32px] font-black uppercase tracking-[3px] sm:tracking-[4px] text-[9px] hover:bg-[#00adef] transition-all flex items-center justify-center gap-3 shadow-xl">
                             <span className="material-symbols-outlined text-lg">refresh</span>Re-assess
                         </button>
                     </div>
                 </div>
-                <p className="text-[10px] sm:text-xs text-gray-300 font-bold uppercase tracking-[2px] sm:tracking-[4px] leading-relaxed opacity-60 text-center sm:text-left break-words max-w-full">
+                <p className="text-[10px] sm:text-xs text-gray-300 font-bold uppercase tracking-[2px] sm:tracking-[4px] leading-relaxed opacity-60 text-left break-words max-w-full">
                     ⚠ This is not a medical diagnosis. Sakina provides emotional support only.
                 </p>
             </header>

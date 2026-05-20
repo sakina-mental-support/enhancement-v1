@@ -9,98 +9,107 @@ import {
     LucideRotateCw, LucideActivity, LucideSmile, LucideEye, 
     LucideFingerprint, LucideDna, LucideSparkles, LucideCompass
 } from 'lucide-react';
+import { getExercises } from '../services/api';
 
 /**
- * 🌌 THE NEURAL WORLDS CONFIGURATION
- * Each world is a complete emotional dimension with unique physics and behavior.
+ * Helper to map custom DB exercises to RecoveryJourney World structure
  */
-const WORLDS = {
-    anxiety: { 
-        id: 'anxiety', 
-        name: 'Deep Peace', 
-        type: 'Fluid Dimension',
-        personality: 'The Serene Guide',
-        atmosphere: 'Deep Underwater',
-        physics: 'Slow, floating particles',
-        story: 'Quiet the noise in your mind.', 
-        color: '#00adef',
-        secondary: '#091426',
-        video: 'https://assets.mixkit.co/videos/preview/mixkit-slow-motion-of-a-beautiful-nebula-in-space-31782-large.mp4',
-        icon: <LucideWaves />,
-        stages: [
-            { id: 'scan', title: 'Neural Scan', text: 'Locate the static in your nervous system.', btn: 'Identified', type: 'scan' },
-            { id: 'breathe', title: 'Fluid Breath', text: 'Sync your lungs with the ocean current.', btn: 'Flowing', type: 'breathe' },
-            { id: 'ground', title: 'Blue Lock', text: 'Anchor your eyes on the deep teal light.', btn: 'Anchored', type: 'lock' },
-            { id: 'release', title: 'Dissolve', text: 'Let your thoughts become water.', btn: 'Dissolved', type: 'release' }
-        ]
-    },
-    yoga: { 
-        id: 'yoga', 
-        name: 'Somatic Earth', 
-        type: 'Grounded Reality',
-        personality: 'The Ancient Mother',
-        atmosphere: 'Forest Roots',
-        physics: 'Dense, earthy pulses',
-        story: 'Move your body to feel light.', 
-        color: '#8b5cf6',
-        secondary: '#2e1065',
-        video: 'https://assets.mixkit.co/videos/preview/mixkit-woman-doing-yoga-on-a-beach-at-sunset-2565-large.mp4',
-        icon: <LucideDna />,
-        stages: [
-            { id: 'tension', title: 'Tension Map', text: 'Press your feet down. Feel the earth push back.', btn: 'Connected', type: 'tension' },
-            { id: 'stretch', title: 'Muscle Release', text: 'Release the heavy weight in your shoulders.', btn: 'Released', type: 'stretch' },
-            { id: 'pulse', title: 'Earth Pulse', text: 'Sync your heartbeat with the forest floor.', btn: 'Synced', type: 'pulse' },
-            { id: 'integrate', title: 'Rooted', text: 'You are part of the earth now. Feel the power.', btn: 'I Am Rooted', type: 'release' }
-        ]
-    },
-    focus: { 
-        id: 'focus', 
-        name: 'Clarity Chamber', 
-        type: 'Geometric Focus',
-        personality: 'The Architect',
-        atmosphere: 'Crystal Void',
-        physics: 'Sharp, linear beams',
-        story: 'Clear the fog and see better.', 
-        color: '#fbbf24',
-        secondary: '#451a03',
-        video: 'https://assets.mixkit.co/videos/preview/mixkit-top-view-of-a-keyboard-and-a-cup-of-coffee-34446-large.mp4',
-        icon: <LucideBrainCircuit />,
-        stages: [
-            { id: 'fog', title: 'Fog Removal', text: 'The brain fog is temporary. Watch it dissolve.', btn: 'Fog Gone', type: 'fog' },
-            { id: 'lock', title: 'Object Lock', text: 'Lock your mind onto a single point of light.', btn: 'Locked On', type: 'lock' },
-            { id: 'neural', title: 'Pulse Sync', text: 'Fire your neurons in a clean, straight line.', btn: 'Fired Up', type: 'pulse' },
-            { id: 'execute', title: 'Clear Vision', text: 'The path is now clear. Ready to act?', btn: 'Ready', type: 'release' }
-        ]
-    },
-    panic: { 
-        id: 'panic', 
-        name: 'Neural Shelter', 
-        type: 'High-Security Calm',
-        personality: 'The Guardian',
-        atmosphere: 'Adaptive Sanctuary',
-        physics: 'Protective shield layers',
-        story: 'Find safety right now.', 
-        color: '#ef4444',
-        secondary: '#450a0a',
-        video: 'https://assets.mixkit.co/videos/preview/mixkit-underwater-view-of-bubbles-rising-to-the-surface-338-large.mp4',
-        icon: <LucideShieldAlert />,
-        stages: [
-            { id: 'safety', title: 'Wall Lock', text: 'Touch the nearest wall. It is solid. It is safe.', btn: 'I Am Safe', type: 'safety' },
-            { id: 'heart', title: 'Rate Stabilize', text: 'The storm is outside. You are inside the shield.', btn: 'Stable', type: 'stabilize' },
-            { id: 'breathe', title: 'Shield Breath', text: 'Breathe the thick, clean air of the shelter.', btn: 'Safe Breath', type: 'breathe' },
-            { id: 'release', title: 'Shelter Lock', text: 'Stay here as long as you need. You are home.', btn: 'Complete', type: 'release' }
-        ]
+const mapExerciseToWorld = (ex) => {
+    const colors = {
+        'Nervous System': { color: '#00adef', secondary: '#091426', icon: <LucideWaves /> },
+        'Emotional Release': { color: '#8b5cf6', secondary: '#2e1065', icon: <LucideDna /> },
+        'Cognitive': { color: '#fbbf24', secondary: '#451a03', icon: <LucideBrainCircuit /> },
+        'Dopamine Recovery': { color: '#ec4899', secondary: '#450a0a', icon: <LucideZap /> },
+        'Mindfulness': { color: '#10b981', secondary: '#064e3b', icon: <LucideCompass /> },
+        'Emergency': { color: '#ef4444', secondary: '#450a0a', icon: <LucideShieldAlert /> }
+    };
+    
+    const config = colors[ex.category] || { color: '#6366f1', secondary: '#1e1b4b', icon: <LucideCompass /> };
+
+    let stages = [];
+    if (ex.content) {
+        stages = ex.content.split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0)
+            .map((stepText, idx) => {
+                const match = stepText.match(/^Step\s*\d+\s*:\s*(.*)/i) || stepText.match(/^(.*?)\s*-\s*(.*)/);
+                const title = match ? (match[1] || `Step ${idx + 1}`) : `Step ${idx + 1}`;
+                const text = match ? (match[2] || stepText) : stepText;
+                
+                let type = 'lock';
+                if (/breathe|breath|inhale|exhale/i.test(text)) type = 'breathe';
+                else if (/scan|notice|feel|sensory/i.test(text)) type = 'scan';
+                else if (/stretch|move|somatic|body/i.test(text)) type = 'tension';
+
+                return {
+                    id: `stage-${idx}`,
+                    title: title.length > 15 ? title.substring(0, 15) + '...' : title,
+                    text: text,
+                    btn: 'Next Step',
+                    type: type
+                };
+            });
     }
+
+    if (stages.length === 0) {
+        stages = [
+            { id: 's1', title: 'Prepare', text: ex.description || 'Settle down in a comfortable space.', btn: 'Prepared', type: 'scan' },
+            { id: 's2', title: 'Begin', text: ex.content || ex.description || 'Follow instructions.', btn: 'Completed', type: 'lock' }
+        ];
+    }
+
+    // Set the final stage button to 'Finish'
+    if (stages.length > 0) {
+        stages[stages.length - 1].btn = 'Finish';
+    }
+
+    return {
+        id: ex._id,
+        name: ex.title,
+        type: ex.category || 'Mindfulness',
+        personality: 'AI Healing Guide',
+        atmosphere: ex.category || 'Therapeutic Shift',
+        physics: `${ex.duration} Mins Session`,
+        story: ex.description,
+        color: config.color,
+        secondary: config.secondary,
+        imageUrl: ex.imageUrl,
+        video: null,
+        icon: config.icon,
+        stages: stages
+    };
 };
 
 const RecoveryJourney = () => {
     const navigate = useNavigate();
     const brain = useEmotionalBrain();
+    const [dbWorlds, setDbWorlds] = useState([]);
     const [selectedWorld, setSelectedWorld] = useState(null);
     const [currentStage, setCurrentStage] = useState(0);
     const [reactivity, setReactivity] = useState(0); // 0 to 1, based on user speed/behavior
     const tapCount = useRef(0);
     const lastTap = useRef(Date.now());
+
+    useEffect(() => {
+        const loadDbExercises = async () => {
+            try {
+                const res = await getExercises();
+                if (res && res.success && res.data) {
+                    // recommendation endpoint returns { recommendations: [...] }
+                    const list = res.data.recommendations || [];
+                    const mapped = list.map(mapExerciseToWorld);
+                    setDbWorlds(mapped);
+                }
+            } catch (err) {
+                console.error("Failed to load custom db exercises:", err);
+            }
+        };
+        loadDbExercises();
+    }, []);
+
+    const allWorlds = useMemo(() => {
+        return dbWorlds;
+    }, [dbWorlds]);
 
     // 🤖 REACTIVITY ENGINE: Detects speed, hesitation, etc.
     const handleInteraction = () => {
@@ -133,7 +142,7 @@ const RecoveryJourney = () => {
         <div className="min-h-screen font-['Inter'] overflow-hidden">
             <AnimatePresence mode="wait">
                 {!selectedWorld ? (
-                    <WorldSelectionScreen onSelect={startWorld} />
+                    <WorldSelectionScreen worlds={allWorlds} onSelect={startWorld} />
                 ) : (
                     <NeuralSession 
                         world={selectedWorld} 
@@ -156,7 +165,7 @@ const RecoveryJourney = () => {
 /**
  * 🌍 SELECTION SCREEN
  */
-const WorldSelectionScreen = ({ onSelect }) => (
+const WorldSelectionScreen = ({ worlds, onSelect }) => (
     <motion.div 
         key="selection"
         initial={{ opacity: 0, y: 20 }}
@@ -176,7 +185,7 @@ const WorldSelectionScreen = ({ onSelect }) => (
         </header>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-            {Object.values(WORLDS).map((w) => (
+            {worlds.map((w) => (
                 <motion.div 
                     key={w.id} 
                     whileHover={{ y: -10, scale: 1.02 }}
@@ -184,7 +193,11 @@ const WorldSelectionScreen = ({ onSelect }) => (
                     className="group relative bg-[#091426] rounded-[32px] sm:rounded-[48px] p-6 sm:p-8 h-[400px] sm:h-[450px] flex flex-col justify-between cursor-pointer shadow-2xl overflow-hidden transition-all duration-700"
                 >
                     <div className="absolute inset-0 opacity-20 group-hover:opacity-60 transition-opacity duration-1000 grayscale group-hover:grayscale-0">
-                        <video autoPlay loop muted src={w.video} className="w-full h-full object-cover"></video>
+                        {w.video ? (
+                            <video autoPlay loop muted src={w.video} className="w-full h-full object-cover"></video>
+                        ) : (
+                            <img src={w.imageUrl} className="w-full h-full object-cover" alt="" />
+                        )}
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-[#091426] via-[#091426]/40 to-transparent group-hover:from-[#091426]/90 transition-all duration-700"></div>
 
@@ -229,7 +242,11 @@ const NeuralSession = ({ world, currentStage, onNext, reactivity, onInteraction,
         >
             {/* 🎬 CINEMATIC BACKGROUND */}
             <div className="absolute inset-0 z-0 pointer-events-none">
-                 <video autoPlay loop muted src={world.video} className="w-full h-full object-cover opacity-20 blur-2xl scale-125 transition-all duration-[3000ms]" style={{ filter: `blur(${40 + reactivity * 40}px) grayscale(${reactivity})` }}></video>
+                 {world.video ? (
+                      <video autoPlay loop muted src={world.video} className="w-full h-full object-cover opacity-20 blur-2xl scale-125 transition-all duration-[3000ms]" style={{ filter: `blur(${40 + reactivity * 40}px) grayscale(${reactivity})` }}></video>
+                 ) : (
+                      <img src={world.imageUrl} className="w-full h-full object-cover opacity-20 blur-2xl scale-125 transition-all" style={{ filter: `blur(${40 + reactivity * 40}px) grayscale(${reactivity})` }} alt="" />
+                 )}
                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#091426]/80"></div>
                  
                  {/* Neural Particles */}
@@ -240,7 +257,7 @@ const NeuralSession = ({ world, currentStage, onNext, reactivity, onInteraction,
             <div className="relative md:absolute md:top-12 flex flex-col items-center gap-4 z-20 mt-4 md:mt-0 mb-8 md:mb-0">
                 <Badge variant="solid" color="teal" size="xs" className="tracking-[6px] sm:tracking-[12px] uppercase bg-white/5 border border-white/10 backdrop-blur-3xl">Neural Presence: {world.personality}</Badge>
                 <div className="flex gap-2">
-                    {[0, 1, 2, 3].map(i => (
+                    {world.stages.map((_, i) => (
                         <div key={i} className={`h-1 rounded-full transition-all duration-700 ${i <= currentStage ? 'w-8 sm:w-12 bg-[#00adef]' : 'w-3 sm:w-4 bg-white/10'}`}></div>
                     ))}
                 </div>

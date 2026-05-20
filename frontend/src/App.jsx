@@ -2,6 +2,7 @@ import React from 'react';
 import SystemHealthBanner from './components/SystemHealthBanner';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
 import { AuthProvider } from './context/AuthContext';
 import MainLayout from './components/MainLayout';
 import Register from './components/Register';
@@ -48,7 +49,7 @@ const App = () => {
             <Route path="/intervention-detail" element={<ProtectedRoute><MainLayout><InterventionDetail /></MainLayout></ProtectedRoute>} />
             <Route path="/chat" element={<ProtectedRoute><MainLayout><ChatPage /></MainLayout></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute><MainLayout><AdminDashboard /></MainLayout></ProtectedRoute>} />
+            <Route path="/admin" element={<AdminRoute><MainLayout><AdminDashboard /></MainLayout></AdminRoute>} />
             <Route path="/mood" element={<ProtectedRoute><MainLayout><MoodTracker /></MainLayout></ProtectedRoute>} />
             <Route path="/music" element={<ProtectedRoute><MainLayout><MusicTherapy /></MainLayout></ProtectedRoute>} />
             <Route path="/journal" element={<ProtectedRoute><MainLayout><Journal /></MainLayout></ProtectedRoute>} />

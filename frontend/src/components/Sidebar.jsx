@@ -8,22 +8,28 @@ const Sidebar = () => {
   const location = useLocation();
   const { user } = useAuth();
 
-  const navItems = [
-    { id: "home", label: "Dashboard", path: "/", icon: "dashboard" },
-    { id: "chat", label: "AI Chat", path: "/chat", icon: "forum", badge: "LIVE" },
-    { id: "mood", label: "Daily Reflection", path: "/mood", icon: "mood", badge: "NEW" },
-    { id: "exercises", label: "Emotional Shifts", path: "/exercises", icon: "bolt" },
-    { id: "therapy", label: "Therapy", path: "/therapy", icon: "self_improvement", badge: "NEW" },
-    { id: "music", label: "Music Therapy", path: "/music", icon: "headphones", badge: "NEW" },
-    { id: "journal", label: "Journal", path: "/journal", icon: "edit_note" },
-    { id: "risk", label: "Risk Assessment", path: "/risk-assessment", icon: "shield", badge: "NEW" },
-  ];
+  const navItems = user?.role === 'admin'
+    ? [
+        { id: "admin", label: "Admin Control", path: "/admin", icon: "admin_panel_settings" },
+        { id: "chat", label: "AI Chat", path: "/chat", icon: "forum", badge: "LIVE" },
+        { id: "exercises", label: "Emotional Shifts", path: "/exercises", icon: "bolt" },
+      ]
+    : [
+        { id: "home", label: "Dashboard", path: "/", icon: "dashboard" },
+        { id: "chat", label: "AI Chat", path: "/chat", icon: "forum", badge: "LIVE" },
+        { id: "mood", label: "Daily Reflection", path: "/mood", icon: "mood", badge: "NEW" },
+        { id: "exercises", label: "Emotional Shifts", path: "/exercises", icon: "bolt" },
+        { id: "therapy", label: "Therapy", path: "/therapy", icon: "self_improvement", badge: "NEW" },
+        { id: "music", label: "Music Therapy", path: "/music", icon: "headphones", badge: "NEW" },
+        { id: "journal", label: "Journal", path: "/journal", icon: "edit_note" },
+        { id: "risk", label: "Risk Assessment", path: "/risk-assessment", icon: "shield", badge: "NEW" },
+      ];
 
   return (
     <header className="w-full h-20 fixed left-0 top-0 z-50 flex items-center justify-between px-10 shadow-[0_4px_30px_-10px_rgba(30,41,59,0.05)] bg-[#f7f9fb]/90 backdrop-blur-md font-['Inter'] border-b border-gray-100/50">
       
       {/* Logo */}
-      <div className="flex items-center gap-3.5 group cursor-pointer flex-shrink-0" onClick={() => navigate("/")}>
+      <div className="flex items-center gap-3.5 group cursor-pointer flex-shrink-0" onClick={() => navigate(user?.role === 'admin' ? "/admin" : "/")}>
         <div className="w-11 h-11 rounded-xl overflow-hidden shadow-md shadow-[#00adef]/15 group-hover:scale-105 transition-transform bg-white border border-gray-100/50 flex items-center justify-center">
           <img 
             src="/sakina_logo.jpg" 
@@ -68,13 +74,15 @@ const Sidebar = () => {
       {/* Right Side: Emergency Calm & User Profile */}
       <div className="flex items-center gap-4 flex-shrink-0">
         {/* Emergency Calm */}
-        <button
-          onClick={() => navigate('/back-to-safe')}
-          className="py-2.5 px-4 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center gap-2 font-bold uppercase tracking-[2px] text-[10px] shadow-sm hover:bg-rose-500 hover:text-white transition-all active:scale-95 flex-shrink-0"
-        >
-          <span className="material-symbols-outlined text-[16px] animate-pulse">emergency</span>
-          <span className="whitespace-nowrap">Calm</span>
-        </button>
+        {user?.role !== 'admin' && (
+          <button
+            onClick={() => navigate('/back-to-safe')}
+            className="py-2.5 px-4 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center gap-2 font-bold uppercase tracking-[2px] text-[10px] shadow-sm hover:bg-rose-500 hover:text-white transition-all active:scale-95 flex-shrink-0"
+          >
+            <span className="material-symbols-outlined text-[16px] animate-pulse">emergency</span>
+            <span className="whitespace-nowrap">Calm</span>
+          </button>
+        )}
 
         {/* Divider */}
         <div className="h-6 w-[1px] bg-gray-200"></div>

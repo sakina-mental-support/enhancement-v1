@@ -44,8 +44,15 @@ const Login = () => {
     setError("");
     setLoading(true);
     try {
-      await login(email, password);
-      navigate("/"); 
+      const res = await login(email, password);
+      // Check role from profile and redirect accordingly
+      const profile = JSON.parse(localStorage.getItem('sakina_profile') || '{}');
+      if (profile.role === 'admin') {
+        navigate('/admin');
+      } else {
+        const hasOnboarded = localStorage.getItem('sakina_onboarding');
+        navigate(hasOnboarded ? '/' : '/onboarding');
+      }
     } catch (err) {
       setError(err.message || "Invalid email or password.");
     } finally {

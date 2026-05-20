@@ -15,6 +15,8 @@ const MOODS = [
 const DAYS = ["S", "M", "T", "W", "T", "F", "S"];
 const BAR_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
+const todayKey = () => new Date().toISOString().slice(0, 10); // "2024-05-20"
+
 const MoodTracker = () => {
   const navigate = useNavigate();
   const { dispatch, emitEvent } = useEmotionalOS();
@@ -26,11 +28,35 @@ const MoodTracker = () => {
     return JSON.parse(localStorage.getItem("sakina_mood_log") || "[]");
   });
 
+  // Already logged today guard
+  const alreadyLoggedToday = weeklyLog.some(e => e.date?.slice(0, 10) === todayKey());
+  const todaysEntry = weeklyLog.find(e => e.date?.slice(0, 10) === todayKey());
+
   const currentDate = new Date();
   const currentMonthName = currentDate.toLocaleString("default", { month: "long" });
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
   const [selectedDay, setSelectedDay] = useState(currentDate.getDate());
+
+  // Build a map of day → mood for calendar coloring
+  const dayMoodMap = {};
+  weeklyLog.forEach(e => {
+    if (e.date) {
+      const d = new Date(e.date);
+      if (d.getMonth() === currentDate.getMonth() && d.getFullYear() === currentDate.getFullYear()) {
+        dayMoodMap[d.getDate()] = e.mood;
+      }
+    }
+  });
+
+  // Find entry for selected day
+  const selectedDayEntry = weeklyLog.find(e => {
+    if (!e.date) return false;
+    const d = new Date(e.date);
+    return d.getDate() === selectedDay &&
+      d.getMonth() === currentDate.getMonth() &&
+      d.getFullYear() === currentDate.getFullYear();
+  });
 
   const calendarDays = [];
   let week = Array(firstDay).fill(null);
@@ -46,8 +72,18 @@ const MoodTracker = () => {
     return { label, score: entry ? MOODS.find(m => m.id === entry.mood)?.score ?? 3 : null };
   });
 
+  const getMoodColor = (moodId) => {
+    const mood = MOODS.find(m => m.id === moodId);
+    return mood?.color || '#94a3b8';
+  };
+
+  const getMoodEmoji = (moodId) => {
+    const mood = MOODS.find(m => m.id === moodId);
+    return mood?.emoji || '😐';
+  };
+
   const handleSubmit = async () => {
-    if (loading) return;
+    if (loading || alreadyLoggedToday) return;
     setLoading(true);
     try {
       const moodObj = MOODS.find(m => m.id === selectedMood);
@@ -107,16 +143,28 @@ const MoodTracker = () => {
           {/* Mini Bar Chart (Weekly Mood) */}
           <div className="bg-white rounded-[32px] sm:rounded-[56px] p-8 sm:p-12 shadow-sakina border border-gray-50">
             <h3 className="text-[9px] sm:text-[11px] font-black uppercase tracking-[4px] sm:tracking-[6px] text-gray-300 mb-6 sm:mb-10">7-Day Neural Wave</h3>
-            <div className="flex items-end gap-2 sm:gap-3 h-24 sm:h-36">
-              {chartData.map((d, i) => (
-                <div key={i} className="flex-1 flex flex-col items-center gap-2 sm:gap-3">
-                  <div className="w-full rounded-t-xl sm:rounded-t-2xl transition-all duration-1000 relative group" style={{ height: d.score ? `${(d.score / 5) * 100}%` : '10%', background: d.score ? (d.score >= 4 ? '#00adef' : d.score === 3 ? '#94a3b8' : '#f43f5e') : '#f0f4f8' }}>
-                    {d.score && <div className="absolute -top-6 sm:top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] sm:text-[10px] font-black text-[#091426]">{d.score}</div>}
+            {weeklyLog.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="animate-empty-float mb-5">
+                  <div className="w-20 h-20 rounded-[24px] bg-gradient-to-br from-[#00adef]/10 to-[#6366f1]/10 flex items-center justify-center shadow-inner border border-white">
+                    <span className="material-symbols-outlined text-4xl text-[#00adef]/40">bar_chart</span>
                   </div>
-                  <span className="text-[7px] sm:text-[9px] font-black uppercase tracking-[1px] sm:tracking-[2px] text-gray-300">{d.label}</span>
                 </div>
-              ))}
-            </div>
+                <p className="text-sm font-black text-[#091426] tracking-tighter mb-1">No data yet</p>
+                <p className="text-xs text-gray-300 font-medium">Log your first mood to start tracking</p>
+              </div>
+            ) : (
+              <div className="flex items-end gap-2 sm:gap-3 h-24 sm:h-36">
+                {chartData.map((d, i) => (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-2 sm:gap-3">
+                    <div className="w-full rounded-t-xl sm:rounded-t-2xl transition-all duration-1000 relative group" style={{ height: d.score ? `${(d.score / 5) * 100}%` : '10%', background: d.score ? (d.score >= 4 ? '#00adef' : d.score === 3 ? '#94a3b8' : '#f43f5e') : '#f0f4f8' }}>
+                      {d.score && <div className="absolute -top-6 sm:top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] sm:text-[10px] font-black text-[#091426]">{d.score}</div>}
+                    </div>
+                    <span className="text-[7px] sm:text-[9px] font-black uppercase tracking-[1px] sm:tracking-[2px] text-gray-300">{d.label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Calendar */}
@@ -130,24 +178,92 @@ const MoodTracker = () => {
             <div className="space-y-2 sm:space-y-3">
               {calendarDays.map((wk, wi) => (
                 <div key={wi} className="grid grid-cols-7 gap-1.5 sm:gap-2">
-                  {wk.map((day, di) => (
-                    <div key={di} className="aspect-square flex items-center justify-center">
-                      {day ? (
-                        <button
-                          onClick={() => setSelectedDay(day)}
-                          className={`w-full h-full rounded-[10px] sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all ${selectedDay === day ? 'bg-[#00adef] text-white shadow-lg scale-110' : day === currentDate.getDate() ? 'border-2 border-[#00adef] text-[#00adef]' : 'text-gray-400 hover:bg-gray-50'}`}
-                        >{day}</button>
-                      ) : <div />}
-                    </div>
-                  ))}
+                  {wk.map((day, di) => {
+                    const moodForDay = dayMoodMap[day];
+                    const isToday = day === currentDate.getDate();
+                    const isSelected = selectedDay === day;
+                    return (
+                      <div key={di} className="aspect-square flex items-center justify-center">
+                        {day ? (
+                          <button
+                            onClick={() => setSelectedDay(day)}
+                            className={`w-full h-full rounded-[10px] sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all relative ${
+                              isSelected
+                                ? 'bg-[#00adef] text-white shadow-lg scale-110'
+                                : isToday
+                                ? 'border-2 border-[#00adef] text-[#00adef]'
+                                : 'text-gray-400 hover:bg-gray-50'
+                            }`}
+                            title={moodForDay ? `${getMoodEmoji(moodForDay)} ${moodForDay}` : ''}
+                          >
+                            {day}
+                            {/* Mood dot indicator */}
+                            {moodForDay && !isSelected && (
+                              <span
+                                className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
+                                style={{ background: getMoodColor(moodForDay) }}
+                              />
+                            )}
+                          </button>
+                        ) : <div />}
+                      </div>
+                    );
+                  })}
                 </div>
               ))}
             </div>
+
+            {/* Selected Day Entry Preview */}
+            {selectedDayEntry ? (
+              <div className="mt-6 pt-6 border-t border-gray-50 animate-fade-in">
+                <p className="text-[8px] font-black uppercase tracking-[3px] text-gray-300 mb-3">
+                  {selectedDay === currentDate.getDate() ? "Today" : `${currentMonthName} ${selectedDay}`}
+                </p>
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{getMoodEmoji(selectedDayEntry.mood)}</span>
+                  <div>
+                    <p className="text-sm font-black text-[#091426] capitalize">{selectedDayEntry.mood}</p>
+                    {selectedDayEntry.note && (
+                      <p className="text-xs text-gray-400 leading-relaxed mt-1 line-clamp-2">"{selectedDayEntry.note}"</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-6 pt-6 border-t border-gray-50">
+                <p className="text-[8px] font-black uppercase tracking-[3px] text-gray-300">
+                  {selectedDay === currentDate.getDate() ? "No entry yet today" : `No entry for ${currentMonthName} ${selectedDay}`}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
         {/* RIGHT: State Selection */}
         <div className="lg:col-span-8 bg-white rounded-[32px] sm:rounded-[56px] p-8 sm:p-16 shadow-sakina border border-gray-50">
+
+          {/* Already logged today banner */}
+          {alreadyLoggedToday && todaysEntry && (
+            <div className="mb-8 p-6 sm:p-8 rounded-[24px] sm:rounded-[32px] bg-[#00adef]/5 border border-[#00adef]/20 flex items-center gap-4 sm:gap-6">
+              <span className="text-3xl">{getMoodEmoji(todaysEntry.mood)}</span>
+              <div className="flex-1">
+                <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[3px] text-[#00adef] mb-1">Already logged today</p>
+                <p className="text-sm sm:text-base font-bold text-[#091426] capitalize">{todaysEntry.mood} — {todaysEntry.note ? `"${todaysEntry.note.slice(0, 60)}${todaysEntry.note.length > 60 ? '...' : ''}"` : 'No note added'}</p>
+              </div>
+              <button
+                onClick={() => {
+                  // Allow override by removing today's entry
+                  const filtered = weeklyLog.filter(e => e.date?.slice(0, 10) !== todayKey());
+                  setWeeklyLog(filtered);
+                  localStorage.setItem("sakina_mood_log", JSON.stringify(filtered));
+                }}
+                className="text-[9px] font-black uppercase tracking-[3px] text-gray-400 hover:text-rose-500 transition-colors whitespace-nowrap"
+              >
+                Update
+              </button>
+            </div>
+          )}
+
           <div className="flex justify-between items-center mb-10 sm:mb-12">
             <div>
               <h2 className="font-['Inter'] text-2xl sm:text-4xl font-bold text-[#091426] tracking-tighter uppercase mb-2">Select State</h2>
@@ -164,7 +280,8 @@ const MoodTracker = () => {
                 <button
                   key={mood.id}
                   onClick={() => setSelectedMood(mood.id)}
-                  className={`flex flex-col items-center gap-3 sm:gap-5 p-4 sm:p-8 rounded-[24px] sm:rounded-[40px] border transition-all duration-500 ${isSelected ? 'border-[#00adef]/30 bg-[#f0f9f8] shadow-xl scale-105' : 'border-transparent bg-[#f7f9fb] hover:bg-white sm:hover:-translate-y-2 hover:shadow-sakina'}`}
+                  disabled={alreadyLoggedToday}
+                  className={`flex flex-col items-center gap-3 sm:gap-5 p-4 sm:p-8 rounded-[24px] sm:rounded-[40px] border transition-all duration-500 ${alreadyLoggedToday ? 'opacity-40 cursor-not-allowed' : ''} ${isSelected ? 'border-[#00adef]/30 bg-[#f0f9f8] shadow-xl scale-105' : 'border-transparent bg-[#f7f9fb] hover:bg-white sm:hover:-translate-y-2 hover:shadow-sakina'}`}
                 >
                   <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-[18px] sm:rounded-3xl bg-white flex items-center justify-center text-2xl sm:text-4xl shadow-inner">{mood.emoji}</div>
                   <div className="text-center">
@@ -183,8 +300,9 @@ const MoodTracker = () => {
               value={note}
               onChange={(e) => setNote(e.target.value)}
               maxLength={300}
+              disabled={alreadyLoggedToday}
               placeholder="How are you feeling, truly?"
-              className="w-full bg-[#f7f9fb] border border-gray-100 rounded-[24px] sm:rounded-[40px] p-6 sm:p-10 text-[#091426] text-sm sm:text-lg font-medium outline-none focus:bg-white focus:border-[#00adef]/30 transition-all min-h-[140px] sm:min-h-[180px] resize-none placeholder:text-gray-200"
+              className="w-full bg-[#f7f9fb] border border-gray-100 rounded-[24px] sm:rounded-[40px] p-6 sm:p-10 text-[#091426] text-sm sm:text-lg font-medium outline-none focus:bg-white focus:border-[#00adef]/30 transition-all min-h-[140px] sm:min-h-[180px] resize-none placeholder:text-gray-200 disabled:opacity-40 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -197,11 +315,13 @@ const MoodTracker = () => {
 
           <button
             onClick={handleSubmit}
-            disabled={loading}
-            className={`w-full py-6 sm:py-8 bg-[#091426] text-white font-black rounded-[24px] sm:rounded-[40px] transition-all flex items-center justify-center gap-4 sm:gap-6 shadow-2xl uppercase text-[10px] sm:text-xs tracking-[6px] sm:tracking-[12px] ${loading ? "opacity-70" : "hover:bg-[#00adef] hover:scale-[1.01] active:scale-95"}`}
+            disabled={loading || alreadyLoggedToday}
+            className={`w-full py-6 sm:py-8 bg-[#091426] text-white font-black rounded-[24px] sm:rounded-[40px] transition-all flex items-center justify-center gap-4 sm:gap-6 shadow-2xl uppercase text-[10px] sm:text-xs tracking-[6px] sm:tracking-[12px] ${loading || alreadyLoggedToday ? "opacity-40 cursor-not-allowed" : "hover:bg-[#00adef] hover:scale-[1.01] active:scale-95"}`}
           >
             {loading ? (
               <><div className="w-5 h-5 sm:w-6 sm:h-6 border-3 sm:border-4 border-white/30 border-t-white rounded-full animate-spin"></div><span className="tracking-[4px] sm:tracking-[12px]">Syncing...</span></>
+            ) : alreadyLoggedToday ? (
+              <><span className="material-symbols-outlined text-xl sm:text-2xl">check_circle</span><span>Already logged today</span></>
             ) : (
               <><span>Log State</span><span className="material-symbols-outlined text-xl sm:text-2xl">arrow_forward</span></>
             )}

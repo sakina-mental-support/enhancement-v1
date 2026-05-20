@@ -2,10 +2,12 @@ import React, { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import BottomNavbar from "./BottomNavbar";
 import { useEmotionalOS } from "../context/EmotionalOSContext.jsx";
+import { useLocation } from "react-router-dom";
 import Badge from "./Badge";
 
 const MainLayout = ({ children }) => {
   const { state, dispatch, EventBus, emitEvent } = useEmotionalOS();
+  const location = useLocation();
   const [isMobile, setIsMobile] = useState(false);
   const [localAtmosphere, setLocalAtmosphere] = useState({
       color: '#00adef',
@@ -85,7 +87,7 @@ const MainLayout = ({ children }) => {
             {!isMobile && !hideSidebar && <Sidebar />}
             
             <main className={`flex-1 transition-all duration-1000 ${state.activeWorld === 'Fog World' ? 'opacity-40 scale-[0.98]' : 'opacity-100'} relative z-10 ${isMobile ? 'p-4 pb-24' : (hideSidebar ? 'p-0' : 'p-10 pt-28 ml-0')}`}>
-                <div className={`${hideSidebar ? 'max-w-full' : 'max-w-[1600px] mx-auto'}`}>
+                <div key={location.pathname} className={`page-transition ${hideSidebar ? 'max-w-full' : 'max-w-[1600px] mx-auto'}`}>
                     {children}
                 </div>
             </main>

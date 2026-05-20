@@ -4,15 +4,22 @@ import { useEmotionalOS } from '../context/EmotionalOSContext.jsx';
 import { useEmotionalBrain } from '../store/useEmotionalBrain';
 import { composeEmotionalShift } from '../utils/sessionComposer';
 import Badge from './Badge';
+import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
     const navigate = useNavigate();
     const { state, dispatch, emitEvent } = useEmotionalOS();
     const brain = useEmotionalBrain();
+    const { user } = useAuth();
     const { metrics, ui } = brain;
     const [greeting, setGreeting] = useState("Good Morning");
     
     useEffect(() => {
+        if (user?.role === 'admin') {
+            navigate('/admin');
+            return;
+        }
+
         const hasOnboarded = localStorage.getItem('sakina_onboarding');
         if (!hasOnboarded) navigate('/onboarding');
 
@@ -20,7 +27,7 @@ const Home = () => {
         if (hour < 12) setGreeting("Good Morning");
         else if (hour < 17) setGreeting("Good Afternoon");
         else setGreeting("Good Evening");
-    }, [navigate]);
+    }, [navigate, user]);
 
     const handleQuickReset = () => {
         navigate('/back-to-safe');

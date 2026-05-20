@@ -131,7 +131,7 @@ const Profile = () => {
     <div className="py-12 animate-fade-in font-['Inter'] pb-32">
       
       {/* 🚀 IDENTITY HEADER */}
-      <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-20">
+      <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-12 lg:mb-20">
         <div className="space-y-6">
             <Badge variant="solid" color="teal" size="sm" className="tracking-[10px] uppercase">Account Settings</Badge>
             <h1 className="text-6xl sm:text-8xl font-black text-[#091426] tracking-tighter uppercase leading-[0.85]">
@@ -139,7 +139,7 @@ const Profile = () => {
                 <span className="text-[#00adef] italic">Profile.</span>
             </h1>
         </div>
-        <div className="flex flex-col sm:flex-row gap-4 items-center">
+        <div className="hidden lg:flex flex-col sm:flex-row gap-4 items-center">
             <button onClick={handleDeleteAccount} className="px-8 py-5 bg-rose-50 text-rose-500 border border-rose-100 font-black rounded-[32px] hover:bg-rose-500 hover:text-white transition-all flex items-center gap-3 uppercase text-[10px] tracking-[4px]">
                 Delete Account
             </button>
@@ -278,7 +278,7 @@ const Profile = () => {
                             </div>
                         </div>
                         {emergencyActive && (
-                            <div className="pt-2 animate-fade-in flex gap-2">
+                            <div className="pt-2 animate-fade-in flex flex-col sm:flex-row gap-2">
                                 <input 
                                     type="tel" 
                                     placeholder="Enter phone number (e.g. +1 234 567 8900)" 
@@ -300,7 +300,7 @@ const Profile = () => {
                                             alert('Failed to save emergency contact');
                                         }
                                     }}
-                                    className="px-6 bg-[#091426] text-white font-bold rounded-xl hover:bg-[#00adef] transition-colors text-xs uppercase tracking-widest"
+                                    className="w-full sm:w-auto px-6 py-3 sm:py-0 bg-[#091426] text-white font-bold rounded-xl hover:bg-[#00adef] transition-colors text-xs uppercase tracking-widest flex-shrink-0"
                                 >
                                     Save
                                 </button>
@@ -312,6 +312,17 @@ const Profile = () => {
         </div>
 
       </div>
+
+      {/* 📱 MOBILE ACTION BUTTONS (Hidden on Desktop) */}
+      <div className="flex lg:hidden flex-col gap-4 mt-12 w-full">
+          <button onClick={handleLogout} className="w-full py-6 bg-[#091426] text-white font-black rounded-[32px] shadow-sakina hover:bg-[#00adef] transition-all flex justify-center items-center gap-4 uppercase text-[11px] tracking-[8px]">
+              Log Out
+          </button>
+          <button onClick={handleDeleteAccount} className="w-full py-5 bg-rose-50 text-rose-500 border border-rose-100 font-black rounded-[32px] hover:bg-rose-500 hover:text-white transition-all flex justify-center items-center gap-3 uppercase text-[10px] tracking-[4px]">
+              Delete Account
+          </button>
+      </div>
+
       {isEditModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-[#091426]/80 backdrop-blur-md animate-fade-in">
             <div className="bg-white rounded-[48px] p-8 sm:p-12 w-full max-w-lg shadow-sakina-lg relative text-left">

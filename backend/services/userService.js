@@ -52,6 +52,16 @@ const getUserProfile = async (userId) => {
   return await User.findById(userId).select("-password");
 };
 
+const makeUserAdmin = async (email) => {
+  const user = await User.findOneAndUpdate(
+    { email },
+    { role: 'admin' },
+    { new: true }
+  ).select('-password');
+  if (!user) throw new Error('User not found');
+  return user;
+};
+
 const updateUserProfile = async (userId, data) => {
   if (data.password) {
     const salt = await bcrypt.genSalt(10);
@@ -70,4 +80,5 @@ module.exports = {
   getUserProfile,
   updateUserProfile,
   deleteUserProfile,
+  makeUserAdmin,
 };

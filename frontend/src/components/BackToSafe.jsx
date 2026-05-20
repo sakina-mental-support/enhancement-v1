@@ -5,7 +5,7 @@ import { useEmotionalBrain } from '../store/useEmotionalBrain';
 import Badge from './Badge';
 import { 
     LucideShieldCheck, LucideHeart, LucideWind, LucideHand, 
-    LucideEye, LucideCheckCircle, LucideHome, LucideClock 
+    LucideEye, LucideCheckCircle, LucideHome, LucideClock, LucideX
 } from 'lucide-react';
 
 const BackToSafe = () => {
@@ -86,9 +86,27 @@ const BackToSafe = () => {
                     {step === 3 && <StepNaming onNext={nextStep} />}
                     {step === 4 && <StepHeart onNext={nextStep} />}
                     {step === 5 && <StepReset onNext={nextStep} />}
-                    {step === 6 && <StepPostSession onComplete={() => navigate('/')} />}
+                    {step === 6 && <StepPostSession onComplete={(choice) => {
+                        // Save feedback to localStorage
+                        const log = JSON.parse(localStorage.getItem('sakina_panic_log') || '[]');
+                        log.push({ what_helped: choice, date: new Date().toISOString() });
+                        localStorage.setItem('sakina_panic_log', JSON.stringify(log.slice(-20)));
+                        navigate('/');
+                    }} />}
                 </AnimatePresence>
             </div>
+
+            {/* ❌ EXIT BUTTON */}
+            <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 2 }}
+                onClick={() => navigate('/')}
+                className="absolute top-8 right-8 z-20 w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/30 hover:bg-white/10 hover:text-white/70 transition-all duration-300"
+                title="Exit to home"
+            >
+                <LucideX size={18} />
+            </motion.button>
 
             {/* PROGRESS DOTS */}
             <div className="absolute bottom-10 flex gap-4 opacity-20">
@@ -221,17 +239,39 @@ const StepReset = ({ onNext }) => (
     </motion.div>
 );
 
-const StepPostSession = ({ onComplete }) => (
-    <motion.div key="post" initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} className="space-y-12 max-w-xl mx-auto">
-        <h2 className="text-4xl font-black uppercase tracking-tighter text-white">What helped <br /> you most?</h2>
-        <div className="grid grid-cols-1 gap-4">
-            {['Breathing', 'Sounds', 'Touching Objects', 'Slowing Down', 'Visuals'].map(opt => (
-                <button key={opt} onClick={onComplete} className="w-full py-6 bg-white/5 hover:bg-amber-200 hover:text-[#091426] border border-white/10 rounded-3xl font-black uppercase tracking-[4px] text-[10px] transition-all text-left px-10">
-                    {opt}
-                </button>
-            ))}
-        </div>
-    </motion.div>
-);
+const StepPostSession = ({ onComplete }) => {
+    const [selected, setSelected] = useState(null);
+    return (
+        <motion.div key="post" initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} className="space-y-12 max-w-xl mx-auto">
+            <h2 className="text-4xl font-black uppercase tracking-tighter text-white">What helped <br /> you most?</h2>
+            <div className="grid grid-cols-1 gap-4">
+                {['Breathing', 'Sounds', 'Touching Objects', 'Slowing Down', 'Visuals'].map(opt => (
+                    <button
+                        key={opt}
+                        onClick={() => setSelected(opt)}
+                        className={`w-full py-6 border rounded-3xl font-black uppercase tracking-[4px] text-[10px] transition-all text-left px-10 ${
+                            selected === opt
+                                ? 'bg-amber-200 text-[#091426] border-amber-200'
+                                : 'bg-white/5 hover:bg-amber-200 hover:text-[#091426] border-white/10 text-white'
+                        }`}
+                    >
+                        {opt}
+                        {selected === opt && <span className="float-right">✓</span>}
+                    </button>
+                ))}
+            </div>
+            {selected && (
+                <motion.button
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    onClick={() => onComplete(selected)}
+                    className="w-full py-6 bg-white text-[#091426] rounded-3xl font-black uppercase tracking-[6px] text-[10px] hover:bg-amber-200 transition-all"
+                >
+                    Complete Session
+                </motion.button>
+            )}
+        </motion.div>
+    );
+};
 
 export default BackToSafe;

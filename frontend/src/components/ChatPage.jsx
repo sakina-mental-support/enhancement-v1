@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useEmotionalOS } from '../context/EmotionalOSContext.jsx';
 import { useEmotionalBrain } from '../store/useEmotionalBrain';
-import { sendChatMessage, getChatHistory, getConversations } from '../services/api';
+import { sendChatMessage, getChatHistory, getConversations, transcribeVoice } from '../services/api';
 import Badge from './Badge';
 
 const QUICK_PROMPTS = [
@@ -55,6 +55,9 @@ const ChatPage = () => {
     const [activeConversationId, setActiveConversationId] = useState(null);
     const [showConversations, setShowConversations] = useState(false);
     const [conversations, setConversations] = useState([]);
+    const [isRecording, setIsRecording] = useState(false);
+    const mediaRecorderRef = useRef(null);
+    const audioChunksRef = useRef([]);
     const messagesEndRef = useRef(null);
 
     const initialGreeting = {
@@ -108,6 +111,48 @@ const ChatPage = () => {
     useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
     const checkForDistress = (text) => DISTRESS_KEYWORDS.some(kw => text.toLowerCase().includes(kw));
+
+    const handleRecord = async () => {
+        if (isRecording) {
+            mediaRecorderRef.current?.stop();
+            setIsRecording(false);
+            return;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const mediaRecorder = new MediaRecorder(stream);
+            mediaRecorderRef.current = mediaRecorder;
+            audioChunksRef.current = [];
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) audioChunksRef.current.push(event.data);
+            };
+
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                stream.getTracks().forEach(track => track.stop());
+                setIsLoading(true);
+                try {
+                    const res = await transcribeVoice(audioBlob);
+                    if (res && res.text) {
+                        setInputValue(prev => prev ? prev + " " + res.text : res.text);
+                    }
+                } catch (error) {
+                    console.error("Transcription error:", error);
+                    alert("Voice transcription failed: " + error.message);
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            mediaRecorder.start();
+            setIsRecording(true);
+        } catch (error) {
+            console.error("Error accessing microphone:", error);
+            alert("Please allow microphone access to record voice.");
+        }
+    };
 
     const handleSend = async (textOverride = null) => {
         const text = (textOverride ?? inputValue).trim();
@@ -274,15 +319,25 @@ const ChatPage = () => {
                         onChange={e => setInputValue(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleSend()}
                         placeholder={`Message...`}
-                        className="w-full bg-[#f7f9fb] border-none rounded-2xl py-4 pl-5 pr-14 text-[15px] font-medium text-[#091426] outline-none focus:ring-1 focus:ring-[#00adef]/20 transition-all placeholder:text-gray-400"
+                        className="w-full bg-[#f7f9fb] border-none rounded-2xl py-4 pl-5 pr-[100px] text-[15px] font-medium text-[#091426] outline-none focus:ring-1 focus:ring-[#00adef]/20 transition-all placeholder:text-gray-400"
                     />
-                    <button
-                        onClick={() => handleSend()}
-                        disabled={!inputValue.trim() || isLoading}
-                        className={`absolute right-1.5 w-11 h-11 rounded-xl flex items-center justify-center transition-all ${inputValue.trim() && !isLoading ? 'bg-[#091426] text-white shadow-lg' : 'bg-gray-100 text-gray-300'}`}
-                    >
-                        <span className="material-symbols-outlined text-xl">north</span>
-                    </button>
+                    <div className="absolute right-1.5 flex gap-1">
+                        <button
+                            onClick={handleRecord}
+                            disabled={isLoading}
+                            className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all ${isRecording ? 'bg-rose-500 text-white animate-pulse shadow-md' : 'bg-transparent text-gray-400 hover:bg-gray-100 hover:text-[#091426]'}`}
+                            title="Record voice to text"
+                        >
+                            <span className="material-symbols-outlined text-xl">{isRecording ? 'stop' : 'mic'}</span>
+                        </button>
+                        <button
+                            onClick={() => handleSend()}
+                            disabled={!inputValue.trim() || isLoading || isRecording}
+                            className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all ${inputValue.trim() && !isLoading && !isRecording ? 'bg-[#091426] text-white shadow-lg' : 'bg-transparent text-gray-300'}`}
+                        >
+                            <span className="material-symbols-outlined text-xl">north</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

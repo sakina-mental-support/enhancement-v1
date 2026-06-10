@@ -26,7 +26,7 @@ timeout /t 2 /nobreak >nul
 :: -- 2. Python AI Microservice --
 echo [2/4] Starting AI Microservice on port 5001...
 echo      (Note: Loading TensorFlow/Models may take 5-10 seconds)
-start "Sakina — AI Microservice" /D "%~dp0ai-service" cmd /k "echo AI Microservice starting... && python flask_api.py"
+start "Sakina — AI Microservice" /D "%~dp0ai-main" cmd /k "echo AI Microservice starting... && pip install --user -r requirements.txt && uvicorn main:app --port 5001 --host 0.0.0.0"
 
 :: Wait longer for AI service to initialize models
 timeout /t 8 /nobreak >nul
@@ -51,7 +51,7 @@ echo  ============================================================
 echo.
 echo   [FRONTEND]   :  http://localhost:5173
 echo   [BACKEND]    :  http://localhost:5000
-echo   [AI SERVICE] :  http://localhost:5001/api/health
+echo   [AI SERVICE] :  http://localhost:5001/
 echo.
 echo   Check the AI Service window for "Running on http://127.0.0.1:5001"
 echo   before starting your therapy session.

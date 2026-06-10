@@ -118,6 +118,26 @@ export const generateTTSAudio = (text) =>
     body: JSON.stringify({ text }),
   });
 
+export const transcribeVoice = async (audioBlob) => {
+  const token = localStorage.getItem("sakina_token");
+  const formData = new FormData();
+  formData.append("file", audioBlob, "recording.webm");
+
+  const response = await fetch(`${BASE_URL}/chat/voice-to-text`, {
+    method: "POST",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Transcription failed: ${errText}`);
+  }
+  return response.json();
+};
+
 export const saveJournalEntry = (text, detectedMood, reflectionQuestion) =>
   request("/journal", {
     method: "POST",

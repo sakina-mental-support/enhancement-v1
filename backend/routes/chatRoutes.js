@@ -3,6 +3,9 @@ const router = express.Router();
 const authMiddleware = require("../middleware/authMiddleware");
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
+const multer = require("multer");
+const fs = require("fs");
+const upload = multer({ dest: 'uploads/' });
 
 // ── Smart fallback responses when Python AI is offline ──
 const FALLBACKS = {
@@ -59,7 +62,7 @@ router.post("/", authMiddleware, async (req, res, next) => {
 
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000); // 8s timeout
+      const timeout = setTimeout(() => controller.abort(), 60000); // 60s timeout
 
       const pyRes = await fetch(pythonAiUrl, {
         method: "POST",
@@ -128,6 +131,37 @@ router.post("/tts", authMiddleware, async (req, res, next) => {
     res.status(200).json({ success: true, audio_base64: ttsData.audio_base64 });
   } catch (error) {
     res.status(200).json({ success: false, message: "TTS unavailable" });
+  }
+});
+
+// POST /api/chat/voice-to-text
+router.post("/voice-to-text", authMiddleware, upload.single("file"), async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, message: "No audio file provided" });
+
+    const pythonVoiceUrl = (process.env.PYTHON_AI_URL || "http://127.0.0.1:5001/api/chat").replace("/chat", "/voice-to-text");
+
+    const buffer = fs.readFileSync(req.file.path);
+    const blob = new Blob([buffer], { type: req.file.mimetype || 'audio/webm' });
+
+    const formData = new FormData();
+    formData.append('file', blob, 'audio.webm');
+
+    const response = await fetch(pythonVoiceUrl, {
+      method: "POST",
+      body: formData,
+    });
+
+    // Cleanup temp file
+    fs.unlink(req.file.path, () => {});
+
+    if (!response.ok) throw new Error(`Voice transcription failed: ${response.status}`);
+    const data = await response.json();
+    res.status(200).json({ success: true, text: data.text });
+  } catch (error) {
+    console.error("Voice to text error:", error);
+    if (req.file) fs.unlink(req.file.path, () => {});
+    res.status(500).json({ success: false, message: error.message + " | " + (error.stack || "") });
   }
 });
 

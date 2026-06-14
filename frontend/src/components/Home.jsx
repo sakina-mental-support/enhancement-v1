@@ -96,13 +96,7 @@ const Home = () => {
                                 </p>
                             </div>
 
-                            <button 
-                                onClick={handleGenerateShift}
-                                className="group/btn relative px-12 sm:px-24 py-8 sm:py-12 bg-white text-[#091426] font-black rounded-[40px] sm:rounded-[56px] shadow-[0_20px_40px_rgba(255,255,255,0.1)] hover:shadow-[0_30px_60px_rgba(0,162,146,0.3)] hover:bg-[#00adef] hover:text-white transition-all duration-500 uppercase tracking-[8px] sm:tracking-[18px] text-[10px] sm:text-xs overflow-hidden"
-                            >
-                                <span className="relative z-10">Start Now</span>
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000"></div>
-                            </button>
+                            
                         </div>
                     </div>
                 </div>
